@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, getDoc, collection, writeBatch, getDocs } from 'firebase/firestore';
-import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'firebase/auth';
 
 const config = {
     apiKey: "AIzaSyDmiQ2KIulzlkTtDT6WBMCo9gez0HnpG2Q",
@@ -77,7 +77,20 @@ export const createUserProfileDocument = async (userAuth, additionalData) => {
 
 export const auth = getAuth(app);
 
-const provider = new GoogleAuthProvider();
-provider.setCustomParameters({ prompt: 'select_account' });
+export const getCurrentUser = () => {
+    return new Promise((resolve, reject) => {
+        if (auth.currentUser) {
+            resolve(auth.currentUser);
+        }
+        const unsubscribe = onAuthStateChanged(auth, user => {
+            unsubscribe();
+            resolve(user);
+        }, reject);
+    });
+}
 
-export const signInWithGoogle = () => signInWithPopup(auth, provider);
+export const googleProvider = new GoogleAuthProvider();
+
+googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
